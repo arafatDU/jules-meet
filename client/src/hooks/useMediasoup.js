@@ -14,7 +14,8 @@ const useMediasoup = (roomId) => {
     if (!roomId) return;
 
     // 1. Connect to Socket.io
-    socketRef.current = io('http://localhost:3001');
+    const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3001';
+    socketRef.current = io(socketUrl);
 
     socketRef.current.on('connection-success', ({ socketId }) => {
       console.log('Connected to server with ID:', socketId);
@@ -143,16 +144,23 @@ const useMediasoup = (roomId) => {
   // Removing the empty function to avoid confusion, but keeping it as a comment for reference of where it was replaced.
 
   // Re-implementing consume to correctly handle the RecvTransport creation
+  const transportCreationPromiseRef = useRef(null);
+
   const getRecvTransport = async () => {
      if (consumerTransportsRef.current.length > 0) {
          return consumerTransportsRef.current[0]; // Reuse the first one for simplicity
      }
 
+     if (transportCreationPromiseRef.current) {
+         return transportCreationPromiseRef.current;
+     }
+
      // Create new
-     return new Promise((resolve, reject) => {
+     transportCreationPromiseRef.current = new Promise((resolve, reject) => {
          socketRef.current.emit('createWebRtcTransport', { consumer: true }, ({ params }) => {
              if (params.error) {
                  console.error(params.error);
+                 transportCreationPromiseRef.current = null;
                  return reject(params.error);
              }
 
@@ -170,9 +178,13 @@ const useMediasoup = (roomId) => {
              resolve(transport);
          });
      });
+
+     return transportCreationPromiseRef.current;
   }
 
   const consumeActual = async (remoteProducerId) => {
+      if (!deviceRef.current || !deviceRef.current.loaded) return;
+
       const transport = await getRecvTransport();
       const rtpCapabilities = deviceRef.current.rtpCapabilities;
 
