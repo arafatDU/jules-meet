@@ -165,7 +165,9 @@ const useMediasoup = (roomId, displayName) => {
       if (isAudioOn) {
           // Turn off
           if (audioProducerRef.current) {
+              const producerId = audioProducerRef.current.id;
               audioProducerRef.current.close();
+              socketRef.current.emit('producer-close', { producerId });
               setPeers(prev => prev.map(p => {
                   if (p.isLocal) return { ...p, audioStream: null };
                   return p;
@@ -197,7 +199,9 @@ const useMediasoup = (roomId, displayName) => {
       if (isVideoOn) {
           // Turn off
           if (videoProducerRef.current) {
+              const producerId = videoProducerRef.current.id;
               videoProducerRef.current.close();
+              socketRef.current.emit('producer-close', { producerId });
               setPeers(prev => prev.map(p => {
                   if (p.isLocal) return { ...p, videoStream: null };
                   return p;
@@ -329,17 +333,13 @@ const useMediasoup = (roomId, displayName) => {
       });
   }
 
-  // Correction: getProducers logic needs socketId.
-  // I will have to fix this in the next tool call, but first let's finish useMediasoup and then fix that via diff.
-
-  // Let's implement fetchPeers
   const fetchPeers = () => {
       socketRef.current.emit('getPeers', (peerList) => {
          setPeers(prev => {
-             // Merge with existing (don't overwrite local)
              const newPeers = [...prev];
              peerList.forEach(remotePeer => {
-                 if (!newPeers.find(p => p.socketId === remotePeer.socketId)) {
+                 const existingPeerIndex = newPeers.findIndex(p => p.socketId === remotePeer.socketId);
+                 if (existingPeerIndex === -1) {
                      newPeers.push({
                          socketId: remotePeer.socketId,
                          displayName: remotePeer.displayName,
@@ -347,6 +347,14 @@ const useMediasoup = (roomId, displayName) => {
                          audioStream: null,
                          videoStream: null
                      });
+                 } else {
+                     // Update display name if it was a fallback
+                     if (newPeers[existingPeerIndex].displayName === 'Participant') {
+                         newPeers[existingPeerIndex] = {
+                             ...newPeers[existingPeerIndex],
+                             displayName: remotePeer.displayName
+                         };
+                     }
                  }
              });
              return newPeers;
