@@ -4,10 +4,10 @@ module.exports = {
 
   mediasoup: {
     // Worker settings
-    numWorkers: Object.keys(require('os').cpus()).length,
+    numWorkers: process.env.MEDIASOUP_WORKERS || Object.keys(require('os').cpus()).length,
     worker: {
       rtcMinPort: 10000,
-      rtcMaxPort: 10100,
+      rtcMaxPort: 12000,
       logLevel: 'warn',
       logTags: [
         'info',

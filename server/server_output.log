@@ -1,0 +1,6 @@
+
+> server@1.0.0 start
+> node server.js
+
+Creating 4 mediasoup workers...
+Server listening on port 3001
