@@ -4,12 +4,21 @@ import useMediasoup from '../hooks/useMediasoup';
 
 const VideoCard = ({ peer }) => {
     const videoRef = useRef(null);
+    const audioRef = useRef(null);
 
     useEffect(() => {
-        if (videoRef.current && peer.stream) {
-            videoRef.current.srcObject = peer.stream;
+        if (videoRef.current && peer.videoStream) {
+            videoRef.current.srcObject = peer.videoStream;
+        } else if (videoRef.current) {
+            videoRef.current.srcObject = null;
         }
-    }, [peer.stream]);
+    }, [peer.videoStream]);
+
+    useEffect(() => {
+        if (audioRef.current && peer.audioStream) {
+            audioRef.current.srcObject = peer.audioStream;
+        }
+    }, [peer.audioStream]);
 
     return (
         <div style={{
@@ -22,15 +31,16 @@ const VideoCard = ({ peer }) => {
             boxShadow: '0 4px 6px rgba(0,0,0,0.3)',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center'
+            justifyContent: 'center',
+            border: peer.isLocal ? '2px solid #007bff' : 'none' // Highlight local user
         }}>
-            {peer.kind === 'video' ? (
+            {peer.videoStream ? (
                 <video
                     ref={videoRef}
                     autoPlay
                     playsInline
-                    muted={peer.isLocal}
-                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    muted={true} // Mute video element always, use audio element for sound (or mute if local)
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', transform: peer.isLocal ? 'scaleX(-1)' : 'none' }}
                 />
             ) : (
                 <div style={{
@@ -48,9 +58,10 @@ const VideoCard = ({ peer }) => {
                     {peer.displayName ? peer.displayName.charAt(0).toUpperCase() : '?'}
                 </div>
             )}
-            {/* Audio element for remote peers to hear them even if video is off or separate track */}
-            {peer.kind === 'audio' && !peer.isLocal && (
-                <audio ref={videoRef} autoPlay playsInline />
+
+            {/* Audio element for remote peers */}
+            {!peer.isLocal && (
+                <audio ref={audioRef} autoPlay playsInline />
             )}
 
             <div style={{
@@ -67,7 +78,7 @@ const VideoCard = ({ peer }) => {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
             }}>
-                {peer.displayName || 'Participant'}
+                {peer.displayName || 'Participant'} {peer.isLocal ? '(You)' : ''}
             </div>
         </div>
     );
@@ -221,8 +232,8 @@ export default function Room() {
           {peers.length === 0 && connected && (
               <div style={{ color: '#aaa', fontSize: '18px' }}>Waiting for others to join...</div>
           )}
-          {peers.map((peer, idx) => (
-              <VideoCard key={peer.id || idx} peer={peer} />
+          {peers.map((peer) => (
+              <VideoCard key={peer.socketId} peer={peer} />
           ))}
       </div>
 
