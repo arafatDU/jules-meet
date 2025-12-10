@@ -89,18 +89,38 @@ io.on('connection', (socket) => {
 
     if (peers[socket.id]) {
         const roomName = peers[socket.id].roomName;
+        socket.to(roomName).emit('peer-left', { socketId: socket.id });
         delete peers[socket.id];
         // socket.leave(roomName) is automatic on disconnect
     }
   });
 
-  socket.on('joinRoom', async ({ roomName }, callback) => {
+  socket.on('joinRoom', async ({ roomName, displayName }, callback) => {
     socket.join(roomName);
-    peers[socket.id] = { roomName };
+    peers[socket.id] = { roomName, displayName };
+
+    socket.to(roomName).emit('new-peer', {
+        socketId: socket.id,
+        displayName,
+    });
 
     // We are using a single router for simplicity, but logically separating rooms via socket.io rooms and filtering
     const rtpCapabilities = router.rtpCapabilities;
     callback({ rtpCapabilities });
+  });
+
+  socket.on('getPeers', (callback) => {
+      const roomName = peers[socket.id]?.roomName;
+      let peerList = [];
+      Object.keys(peers).forEach(socketId => {
+          if (socketId !== socket.id && peers[socketId].roomName === roomName) {
+              peerList.push({
+                  socketId,
+                  displayName: peers[socketId].displayName
+              });
+          }
+      });
+      callback(peerList);
   });
 
   socket.on('createWebRtcTransport', async ({ consumer }, callback) => {
@@ -276,6 +296,7 @@ io.on('connection', (socket) => {
          if (p.socketId !== socket.id && p.roomName === roomName) {
              returnProducers.push({
                  producerId: p.producer.id,
+                 socketId: p.socketId,
                  appData: p.producer.appData
              });
          }
