@@ -183,7 +183,8 @@ io.on('connection', (socket) => {
         // Notify other clients in the room about the new producer
         socket.to(roomName).emit('new-producer', {
             producerId: producer.id,
-            socketId: socket.id
+            socketId: socket.id,
+            appData: producer.appData
         });
 
         callback({
@@ -273,7 +274,10 @@ io.on('connection', (socket) => {
       let returnProducers = [];
       producers.forEach(p => {
          if (p.socketId !== socket.id && p.roomName === roomName) {
-             returnProducers.push(p.producer.id)
+             returnProducers.push({
+                 producerId: p.producer.id,
+                 appData: p.producer.appData
+             });
          }
       });
       callback(returnProducers);

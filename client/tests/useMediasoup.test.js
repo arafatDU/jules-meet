@@ -42,7 +42,7 @@ describe('useMediasoup', () => {
     // For now, let's just assert the hook returns expected interface
     expect(result.current.connected).toBe(false);
     expect(result.current.peers).toEqual([]);
-    expect(typeof result.current.produce).toBe('function');
-    expect(typeof result.current.consume).toBe('function');
+    expect(typeof result.current.toggleMic).toBe('function');
+    expect(typeof result.current.toggleWebcam).toBe('function');
   });
 });
