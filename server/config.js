@@ -1,6 +1,6 @@
 module.exports = {
   listenIp: '0.0.0.0',
-  listenPort: 3001,
+  listenPort: process.env.PORT || 3001,
 
   mediasoup: {
     // Worker settings
@@ -59,7 +59,7 @@ module.exports = {
       listenIps: [
         {
           ip: '0.0.0.0',
-          announcedIp: '127.0.0.1' // Replace with public IP in production or real env
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || '127.0.0.1' // Replace with public IP in production or real env
         }
       ],
       maxIncomingBitrate: 1500000,
