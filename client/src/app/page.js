@@ -78,7 +78,7 @@ const VideoCard = ({ peer }) => {
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap'
             }}>
-                {peer.displayName || 'Participant'} {peer.isLocal ? '(You)' : ''}
+                {peer.displayName || 'Participant'}
             </div>
         </div>
     );
@@ -107,96 +107,342 @@ export default function Room() {
       setJoined(true);
   }
 
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [startMeetingName, setStartMeetingName] = useState('');
+  const [joinMeetingName, setJoinMeetingName] = useState('');
+  const [joinRoomId, setJoinRoomId] = useState('');
+
+  const handleStartMeeting = () => {
+      if (!startMeetingName) {
+          alert('Please enter your name');
+          return;
+      }
+      setDisplayName(startMeetingName);
+      const newRoomId = Math.random().toString(36).substring(7);
+      setRoomId(newRoomId);
+      setJoined(true);
+  };
+
+  const handleJoinMeeting = () => {
+      if (!joinMeetingName || !joinRoomId) {
+          alert('Please enter your name and meeting code');
+          return;
+      }
+      setDisplayName(joinMeetingName);
+      setRoomId(joinRoomId);
+      setJoined(true);
+  };
+
   if (!joined) {
       return (
         <div style={{
-            display: 'flex',
-            height: '100vh',
-            justifyContent: 'center',
-            alignItems: 'center',
-            backgroundColor: '#f5f5f5',
+            minHeight: '100vh',
+            backgroundColor: '#f0f2f5',
             fontFamily: 'Arial, sans-serif'
         }}>
-            <div style={{
-                padding: '40px',
+            {/* Navbar */}
+            <nav style={{
                 backgroundColor: 'white',
-                borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                textAlign: 'center',
-                width: '100%',
-                maxWidth: '400px'
+                padding: '18px 40px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
             }}>
-                <h1 style={{ marginBottom: '30px', color: '#333' }}>Join Meeting</h1>
-
-                <input
-                    type="text"
-                    placeholder="Your Name"
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    style={{
-                        width: '100%',
-                        padding: '12px',
-                        marginBottom: '15px',
-                        borderRadius: '6px',
-                        border: '1px solid #ccc',
-                        fontSize: '16px',
-                        boxSizing: 'border-box'
-                    }}
-                />
-
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                     <input
-                        type="text"
-                        placeholder="Room ID"
-                        value={roomId}
-                        onChange={(e) => setRoomId(e.target.value)}
-                        style={{
-                            flex: 1,
-                            padding: '12px',
-                            borderRadius: '6px',
-                            border: '1px solid #ccc',
-                            fontSize: '16px',
-                            boxSizing: 'border-box'
-                        }}
-                    />
-                    <button
-                        onClick={handleJoin}
-                        disabled={!roomId || !displayName}
-                        style={{
-                            padding: '12px 20px',
-                            backgroundColor: '#007bff',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
-                            cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            opacity: (!roomId || !displayName) ? 0.6 : 1
-                        }}
-                    >
-                        Join
-                    </button>
+                {/* Logo/Brand */}
+                <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <svg width="32" height="32" viewBox="0 0 32 32" style={{ display: 'block' }}>
+                        <rect x="4" y="10" width="24" height="16" rx="2" fill="none" stroke="#5B6AF5" strokeWidth="2"/>
+                        <circle cx="16" cy="18" r="3" fill="#5B6AF5"/>
+                        <path d="M 28 14 L 30 12 L 30 22 L 28 20" fill="#5B6AF5"/>
+                    </svg>
+                    <span style={{
+                        fontSize: '20px',
+                        fontWeight: '600',
+                        color: '#2d3748',
+                        letterSpacing: '-0.5px'
+                    }}>
+                        STL-Meet
+                    </span>
                 </div>
 
-                <div style={{ borderTop: '1px solid #eee', paddingTop: '20px' }}>
+                {/* Profile Section */}
+                <div style={{ position: 'relative' }}>
                     <button
-                        onClick={createMeeting}
-                        disabled={!displayName}
+                        onClick={() => setShowProfileMenu(!showProfileMenu)}
                         style={{
-                            width: '100%',
-                            padding: '12px',
-                            backgroundColor: '#28a745',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '6px',
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: '#f7fafc',
+                            border: '2px solid #e2e8f0',
                             cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: 'bold',
-                            opacity: !displayName ? 0.6 : 1
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                            padding: 0
+                        }}
+                        onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#cbd5e0';
+                            e.currentTarget.style.backgroundColor = '#edf2f7';
+                        }}
+                        onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = '#e2e8f0';
+                            e.currentTarget.style.backgroundColor = '#f7fafc';
                         }}
                     >
-                        Create New Meeting
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <circle cx="10" cy="7" r="3" stroke="#4a5568" strokeWidth="1.5"/>
+                            <path d="M 4 17 Q 4 13 10 13 Q 16 13 16 17" stroke="#4a5568" strokeWidth="1.5" fill="none"/>
+                        </svg>
                     </button>
+                    {showProfileMenu && (
+                        <div style={{
+                            position: 'absolute',
+                            top: '50px',
+                            right: '0',
+                            backgroundColor: 'white',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                            padding: '12px 20px',
+                            minWidth: '120px',
+                            zIndex: 1000
+                        }}>
+                            <div style={{
+                                color: '#333',
+                                fontSize: '16px',
+                                fontWeight: '500'
+                            }}>
+                                Guest
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </nav>
+
+            {/* Main Content */}
+            <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '80px 20px 60px',
+                gap: '30px'
+            }}>
+                {/* Two Boxes Container */}
+                <div style={{
+                    display: 'flex',
+                    gap: '24px',
+                    flexWrap: 'wrap',
+                    justifyContent: 'center',
+                    width: '100%',
+                    maxWidth: '920px'
+                }}>
+                    {/* Start Meeting Box */}
+                    <div style={{
+                        flex: '1',
+                        minWidth: '300px',
+                        maxWidth: '440px',
+                        padding: '32px',
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '4px'
+                        }}>
+                            <svg width="32" height="32" viewBox="0 0 32 32" style={{ flexShrink: 0 }}>
+                                <circle cx="16" cy="16" r="14" fill="none" stroke="#5B6AF5" strokeWidth="2"/>
+                                <line x1="16" y1="10" x2="16" y2="22" stroke="#5B6AF5" strokeWidth="2" strokeLinecap="round"/>
+                                <line x1="10" y1="16" x2="22" y2="16" stroke="#5B6AF5" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                            <h2 style={{
+                                fontSize: '20px',
+                                fontWeight: '600',
+                                color: '#2d3748',
+                                margin: 0
+                            }}>
+                                Start a Meeting
+                            </h2>
+                        </div>
+                        <p style={{
+                            color: '#718096',
+                            fontSize: '14px',
+                            margin: '0 0 8px 0',
+                            lineHeight: '1.5'
+                        }}>
+                            Create a new meeting and share the code with others.
+                        </p>
+                        <input
+                            type="text"
+                            placeholder="Enter your name"
+                            value={startMeetingName}
+                            onChange={(e) => setStartMeetingName(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #e2e8f0',
+                                fontSize: '15px',
+                                boxSizing: 'border-box',
+                                transition: 'border-color 0.2s',
+                                outline: 'none',
+                                fontFamily: 'inherit'
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = '#5B6AF5'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                        />
+                        <button
+                            onClick={handleStartMeeting}
+                            disabled={!startMeetingName}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                backgroundColor: startMeetingName ? '#5B6AF5' : '#cbd5e0',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: startMeetingName ? 'pointer' : 'not-allowed',
+                                fontSize: '15px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s',
+                                fontFamily: 'inherit'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (startMeetingName) {
+                                    e.currentTarget.style.backgroundColor = '#4C5DE4';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (startMeetingName) {
+                                    e.currentTarget.style.backgroundColor = '#5B6AF5';
+                                }
+                            }}
+                        >
+                            Start Meeting
+                        </button>
+                    </div>
+
+                    {/* Join Meeting Box */}
+                    <div style={{
+                        flex: '1',
+                        minWidth: '300px',
+                        maxWidth: '440px',
+                        padding: '32px',
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                        border: '1px solid #e2e8f0',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '20px'
+                    }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '4px'
+                        }}>
+                            <svg width="32" height="32" viewBox="0 0 32 32" style={{ flexShrink: 0 }}>
+                                <circle cx="16" cy="16" r="14" fill="none" stroke="#48BB78" strokeWidth="2"/>
+                                <path d="M 12 16 L 16 20 L 22 12" fill="none" stroke="#48BB78" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            <h2 style={{
+                                fontSize: '20px',
+                                fontWeight: '600',
+                                color: '#2d3748',
+                                margin: 0
+                            }}>
+                                Join a Meeting
+                            </h2>
+                        </div>
+                        <p style={{
+                            color: '#718096',
+                            fontSize: '14px',
+                            margin: '0 0 8px 0',
+                            lineHeight: '1.5'
+                        }}>
+                            Enter your details and meeting code to join.
+                        </p>
+                        <input
+                            type="text"
+                            placeholder="Enter your name"
+                            value={joinMeetingName}
+                            onChange={(e) => setJoinMeetingName(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #e2e8f0',
+                                fontSize: '15px',
+                                boxSizing: 'border-box',
+                                transition: 'border-color 0.2s',
+                                outline: 'none',
+                                fontFamily: 'inherit'
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = '#48BB78'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Enter meeting code"
+                            value={joinRoomId}
+                            onChange={(e) => setJoinRoomId(e.target.value)}
+                            style={{
+                                width: '100%',
+                                padding: '12px 14px',
+                                borderRadius: '8px',
+                                border: '1.5px solid #e2e8f0',
+                                fontSize: '15px',
+                                boxSizing: 'border-box',
+                                transition: 'border-color 0.2s',
+                                outline: 'none',
+                                fontFamily: 'inherit'
+                            }}
+                            onFocus={(e) => e.target.style.borderColor = '#48BB78'}
+                            onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                        />
+                        <button
+                            onClick={handleJoinMeeting}
+                            disabled={!joinMeetingName || !joinRoomId}
+                            style={{
+                                width: '100%',
+                                padding: '12px',
+                                backgroundColor: (joinMeetingName && joinRoomId) ? '#48BB78' : '#cbd5e0',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: (joinMeetingName && joinRoomId) ? 'pointer' : 'not-allowed',
+                                fontSize: '15px',
+                                fontWeight: '600',
+                                transition: 'all 0.2s',
+                                fontFamily: 'inherit'
+                            }}
+                            onMouseEnter={(e) => {
+                                if (joinMeetingName && joinRoomId) {
+                                    e.currentTarget.style.backgroundColor = '#38A169';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                if (joinMeetingName && joinRoomId) {
+                                    e.currentTarget.style.backgroundColor = '#48BB78';
+                                }
+                            }}
+                        >
+                            Join Meeting
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
